@@ -2,11 +2,17 @@ require("dotenv").config();
 const { Telegraf, Markup } = require("telegraf");
 const { createCanvas, loadImage, registerFont } = require("canvas");
 const fs = require("fs");
+const express = require("express");
 
 if (!process.env.BOT_TOKEN) {
   console.error("❌ BOT_TOKEN is missing in .env file!");
   process.exit(1);
 }
+
+// Create an Express app to bind to the port on Render
+const app = express();
+const port = process.env.PORT || 3200; // Make sure your bot listens on the correct port
+
 // دالة لكتابة النص مع التحكم في العرض الأقصى
 function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
   let words = text.split(" ");
@@ -54,22 +60,17 @@ async function generateWelcomeImage(username) {
   }
 
   // إعداد النصوص
-  // إعداد النصوص
   ctx.textAlign = "center";
   ctx.fillStyle = "#ffffff";
   ctx.strokeStyle = "#000000";
   ctx.lineWidth = 4;
   const marginX = 10; // Horizontal margin (left and right)
-  const marginY = 40; //
+  const marginY = 40; // Vertical margin for text
+
   // عنوان الترحيب
   ctx.font = "bold 25px Cairo";
   ctx.strokeText(`${username}`, width / 2, 100 + marginY); // Adjusted Y position for margin
-  ctx.fillText(`${username}`, width / 2, 100 + marginY); // Adjus
-
-  // نصوص المعلومات (مع تحديد العرض الأقصى)
-  ctx.font = "bold 25px Cairo";
-  //   drawWrappedText(ctx, " نورت الجروب !", width / 2, 180, 500, 35);
-  //   drawWrappedText(ctx, "الاحترام أساسي وممنوع الخروج عن محتوى الجروب :)", width / 2, 220, 500, 35);
+  ctx.fillText(`${username}`, width / 2, 100 + marginY); // Adjusted Y position for margin
 
   // حفظ الصورة
   const filePath = `welcome_${username}.jpeg`;
@@ -92,8 +93,7 @@ bot.on("new_chat_members", async (ctx) => {
     await ctx.replyWithPhoto(
       { source: imagePath },
       {
-        caption: `🌟 أهلا وسهلا بك ${username}! نورت السيرفر 🚀
-        يارب تستفيد هنا ان شاءالله :)`,
+        caption: `🌟 أهلا وسهلا بك ${username}! نورت السيرفر 🚀`,
         reply_markup: Markup.inlineKeyboard([
           Markup.button.url("🔗 قناتنا على يوتيوب", "https://www.youtube.com/@noorboi6706"),
         ]),
@@ -126,3 +126,13 @@ bot.telegram
     console.error("❌ Bot connection failed:", err);
     process.exit(1);
   });
+
+// Add a simple route to keep the app alive
+app.get("/", (req, res) => {
+  res.send("Hello, the bot is running!");
+});
+
+// Start the Express app
+app.listen(port, () => {
+  console.log(`🌍 Express app listening on port ${port}`);
+});
